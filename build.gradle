@@ -34,7 +34,7 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    implementation 'com.example:UberProject-EntityService:0.0.2-SNAPSHOT'
+    implementation 'com.example:UberProject-EntityService:0.0.4-SNAPSHOT'
     // https://mvnrepository.com/artifact/redis.clients/jedis
     implementation 'redis.clients:jedis:6.0.0'
 

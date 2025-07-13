@@ -22,11 +22,14 @@ import java.util.List;
 public class LocationControllers {
 
     private LocationService locationService;
+    private StringRedisTemplate redisTemplate;
+    private static final String DRIVER_GEO_OPS_KEY = "drivers";
+    private static final double DEFAULT_RADIUS = 5.0;
 
 
-
-    public LocationControllers(LocationService locationService){
+    public LocationControllers(LocationService locationService, StringRedisTemplate redisTemplate){
         this.locationService = locationService;
+        this.redisTemplate = redisTemplate;
     }
 
     @PostMapping("/drivers")
@@ -40,41 +43,38 @@ public class LocationControllers {
         }
     }
 
-//    @PostMapping("/drivers/bulk")
-//    public ResponseEntity<Boolean> saveBulkDriverLocations(@RequestBody List<SaveDriverLocationRequestDto> driverList) {
-//        try {
-//            GeoOperations<String, String> geoOperations = redisTemplate.opsForGeo();
-//
-//            for (SaveDriverLocationRequestDto dto : driverList) {
-//                geoOperations.add(
-//                        DRIVER_GEO_OPS_KEY,
-//                        new RedisGeoCommands.GeoLocation<>(
-//                                dto.getDriverId(),
-//                                new Point(dto.getLongitude(), dto.getLatitude()) // ✅ Note: longitude first!
-//                        )
-//                );
-//            }
-//
-//            System.out.println("✅ Successfully saved " + driverList.size() + " driver locations.");
-//            return ResponseEntity.status(HttpStatus.CREATED).body(true);
-//
-//        } catch (Exception e) {
-//            System.err.println("❌ Error while saving bulk driver locations: " + e.getMessage());
-//            e.printStackTrace();
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
-//        }
-//    }
+    @PostMapping("/drivers/bulk")
+    public ResponseEntity<Boolean> saveBulkDriverLocations(@RequestBody List<SaveDriverLocationRequestDto> driverList) {
+        try {
+            GeoOperations<String, String> geoOperations = redisTemplate.opsForGeo();
+
+            for (SaveDriverLocationRequestDto dto : driverList) {
+                geoOperations.add(
+                        DRIVER_GEO_OPS_KEY,
+                        new RedisGeoCommands.GeoLocation<>(
+                                dto.getDriverId(),
+                                new Point(dto.getLongitude(), dto.getLatitude()) // ✅ Note: longitude first!
+                        )
+                );
+            }
+
+            System.out.println("✅ Successfully saved " + driverList.size() + " driver locations.");
+            return ResponseEntity.status(HttpStatus.CREATED).body(true);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error while saving bulk driver locations: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(false);
+        }
+    }
 
 
 
-    @GetMapping("/nearby/drivers")
-    public ResponseEntity<List<DriverLocationDto>> getNearbyDrivers(
-            @RequestParam double latitude,
-            @RequestParam double longitude) {
-
+    @PostMapping("/nearby/drivers")
+    public ResponseEntity<List<DriverLocationDto>> getNearbyDrivers(@RequestBody NearbyDriversReqestDto nearbyDriversReqestDto) {
 
         try {
-            List<DriverLocationDto> drivers = locationService.getNearbyDrivers(latitude, longitude);
+            List<DriverLocationDto> drivers = locationService.getNearbyDrivers(nearbyDriversReqestDto.getLatitude(),  nearbyDriversReqestDto.getLongitude());
             return new ResponseEntity<>(drivers, HttpStatus.OK);
 
         } catch (Exception e) {
